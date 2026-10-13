@@ -1,6 +1,6 @@
 import re
 
-from .base import Finding, Project, Rule, mcp_surface_paths
+from .base import Finding, Fires, Project, Rule, Silent, mcp_surface_paths
 
 PY_RX = r"last_event_id|LAST_EVENT_ID"
 PY_HEADER_RX = r"""["']last-event-id["']|["']Last-Event-ID["']"""
@@ -35,6 +35,87 @@ class SSEResumabilityRemoved(Rule):
         "now, the client issues a fresh request."
     )
     languages = ("python", "typescript")
+    boundaries = (
+        Fires(
+            snippet='last_event_id = request.headers.get("Last-Event-ID")',
+            reason="A variable named for the resume cursor is active Python code.",
+        ),
+        Fires(
+            snippet='LAST_EVENT_ID = "Last-Event-ID"',
+            reason="A Python constant carries the removed header name.",
+        ),
+        Fires(
+            snippet=(
+                'from mcp.server import Server\n\n'
+                'cursor = request.headers.get("Last-Event-ID")'
+            ),
+            reason="A header read into any name fires once the file shows MCP surface.",
+        ),
+        Fires(
+            snippet="return replay_events(last_event_id)",
+            reason="Python code still uses the removed resume cursor.",
+        ),
+        Silent(
+            snippet="# Last-Event-ID resumability was removed",
+            reason="A comment documenting the removal is not an implementation.",
+        ),
+        Silent(
+            snippet=(
+                'from mcp.server import Server\n\n'
+                'NOTICE = "Last-Event-ID resumability was removed"'
+            ),
+            reason="A user-facing notice about the removal is prose, not active code.",
+        ),
+        Silent(
+            snippet='cursor = request.headers.get("last-event-id") or ""',
+            reason=(
+                "The same read with no MCP surface in its file is an ordinary EventSource "
+                "stream: without this gate, invisible-playwright-mcp's /chat/events route "
+                "goes from A/97 to C/72."
+            ),
+        ),
+        Fires(
+            snippet='const lastEventId = req.headers.get("last-event-id");',
+            reason="TypeScript code reads the removed SSE resume cursor.",
+            language="typescript",
+        ),
+        Fires(
+            snippet=(
+                'import { Server } from "@modelcontextprotocol/sdk/server/index.js";\n'
+                'const cursor = req.headers["last-event-id"];'
+            ),
+            reason="A header read into any name fires once the file shows MCP surface.",
+            language="typescript",
+        ),
+        Fires(
+            snippet="return replayEventsAfter(lastEventID);",
+            reason="TypeScript code still uses the removed resume cursor.",
+            language="typescript",
+        ),
+        Silent(
+            snippet="// We dropped lastEventId / Last-Event-ID resumability support.",
+            reason="A TypeScript comment documenting the removal is not code.",
+            language="typescript",
+        ),
+        Silent(
+            snippet="const lastEventIdentifier = new Map();",
+            reason="A longer identifier is outside the bounded cursor name.",
+            language="typescript",
+        ),
+        Silent(
+            snippet=(
+                'import { Server } from "@modelcontextprotocol/sdk/server/index.js";\n'
+                'const notice = "Last-Event-ID resumability was removed";'
+            ),
+            reason="A sentence that mentions the header is not the quoted header name.",
+            language="typescript",
+        ),
+        Silent(
+            snippet='const cursor = req.headers["last-event-id"] ?? "";',
+            reason="The same read with no MCP surface in its file is an ordinary EventSource stream.",
+            language="typescript",
+        ),
+    )
 
     def check(self, project: Project) -> list[Finding]:
         if project.language == "typescript":
