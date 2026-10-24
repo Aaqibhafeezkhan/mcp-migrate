@@ -4,6 +4,12 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+### Fixed
+
+- Read the UTF-8 registry and scan inputs and generate the landing page independently
+  of the host's default encoding. Escape the absolute baseline path in its TOML
+  test fixture on Windows.
+
 ## [0.21.0] - 2026-10-21
 
 ### Fixed
