@@ -153,6 +153,7 @@ def test_generator_writes_utf8_with_a_legacy_default_encoding(tmp_path, monkeypa
     monkeypatch.setattr(render_findings, "DATA", scan)
     monkeypatch.setattr(render_findings, "PRIOR", tmp_path / "missing-prior.json")
     monkeypatch.setattr(render_findings, "OUT", output)
+    monkeypatch.setattr(render_findings, "ROOT", tmp_path)
 
     write_text = Path.write_text
 
@@ -184,6 +185,7 @@ def test_generator_preserves_utf8_scan_text(tmp_path, monkeypatch, legacy_defaul
     monkeypatch.setattr(render_findings, "DATA", scan)
     monkeypatch.setattr(render_findings, "PRIOR", tmp_path / "missing-prior.json")
     monkeypatch.setattr(render_findings, "OUT", output)
+    monkeypatch.setattr(render_findings, "ROOT", tmp_path)
 
     assert main() == 0
     rendered = output.read_bytes().decode("utf-8")
