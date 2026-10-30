@@ -6,6 +6,10 @@ All notable changes to this project are documented here.
 
 ### Fixed
 
+- **R018 detects quoted `elicitationId` payload keys** in Python and TypeScript
+  ([#351](https://github.com/dheerajjha/mcp-migrate/issues/351)). Identifier and
+  quoted-key matches on the same line produce one finding; prose and longer
+  keys stay silent, including concatenated prose and key fragments.
 - **R001 keeps TypeScript CORS exposure lists silent regardless of order**
   ([#352](https://github.com/dheerajjha/mcp-migrate/issues/352)). The subscript
   alternative now requires a receiver before the opening bracket, while actual
